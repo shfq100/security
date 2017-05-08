@@ -1,0 +1,378 @@
+LDAP
+----------
+
+Installing OpenLdap Server
+-----------------------------------
+
+1. Installing the packages
+
+ yum install -y "openldap" migrationtools openldap-clients
+
+migration tools - copying user details to ldap database
+
+2. Create LDAP Password
+ 
+ [root@host4 ~]# slappasswd
+New password: 
+Re-enter new password: 
+{SSHA}FQJy2/e830TwTngdcpYwcD9CJ+TM+KFN
+
+{SSHA}FQJy2/e830TwTngdcpYwcD9CJ+TM+KFN
+
+3. LDAP configuration Directory
+
+/etc/openldap/slapd.d/cn=config
+
+Change these configuration files
+-------------------------------------------
+
+3.1. vim  vim olcDatabase\=\{2\}hdb.ldif 
+
+==============================================
+olcSuffix: dc=hpe123,dc=com
+olcRootDN: cn=Manager,dc=hpe123,dc=com
+olcRootPW: {SSHA}FQJy2/e830TwTngdcpYwcD9CJ+TM+KFN
+
+
+==============================================
+
+3.2. vim olcDatabase\=\{1\}monitor.ldif 
+
+========================================
+olcAccess: {0}to * by dn.base="gidNumber=0+uidNumber=0,cn=peercred,cn=extern
+ al,cn=auth" read by dn.base="cn=Manager,dc=hpe123,dc=com" read by * none
+========================================
+
+4. Test the configuration 
+
+[root@host4 cn=config]# slaptest -u
+58f6fe90 ldif_read_file: checksum error on "/etc/openldap/slapd.d/cn=config/olcDatabase={1}monitor.ldif"
+58f6fe90 ldif_read_file: checksum error on "/etc/openldap/slapd.d/cn=config/olcDatabase={2}hdb.ldif"
+config file testing succeeded
+
+
+ignore the checksum errors 
+
+5. start and enable LDAP service (slapd)
+
+=====================================
+[root@host4 cn=config]# systemctl start slapd
+[root@host4 cn=config]# systemctl enable slapd
+Created symlink from /etc/systemd/system/multi-user.target.wants/slapd.service to /usr/lib/systemd/system/slapd.service.
+[root@host4 cn=config]# 
+=======================================
+
+6. Creating Database for LDAP
+
+6.1.copy the sample database example of ldap from /usr/share to /var/lib/ldap directory
+
+ cp -rf /usr/share/openldap-servers/DB_CONFIG.example /var/lib/ldap/DB_CONFIG
+ 
+6.2  Add LDAP schemas
+
+ ========================================
+ [root@host4 cn=config]# ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/cosine.ldif
+  
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+adding new entry "cn=cosine,cn=schema,cn=config"
+======================================================
+======================================================
+[root@host4 cn=config]# ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/nis.ldif 
+
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+adding new entry "cn=nis,cn=schema,cn=config"
+========================================================
+
+========================================================
+[root@host4 cn=config]# ldapadd -Y EXTERNAL -H ldapi:// -f /etc/openldap/schema/inetorgperson.ldif 
+
+SASL/EXTERNAL authentication started
+SASL username: gidNumber=0+uidNumber=0,cn=peercred,cn=external,cn=auth
+SASL SSF: 0
+adding new entry "cn=inetorgperson,cn=schema,cn=config"
+=========================================================
+
+8. Create BaseObjects
+
+for base objects we need migration tools(already installed )
+
+under /usr/share/migrationtools we can see some files related to  migration
+
+=======================================================
+[root@host4 cn=config]# ll /usr/share/migrationtools/
+total 128
+-rwxr-xr-x. 1 root root  2652 Jun  9  2014 migrate_aliases.pl
+-rwxr-xr-x. 1 root root  2950 Jun  9  2014 migrate_all_netinfo_offline.sh
+-rwxr-xr-x. 1 root root  2946 Jun  9  2014 migrate_all_netinfo_online.sh
+-rwxr-xr-x. 1 root root  3011 Jun  9  2014 migrate_all_nis_offline.sh
+-rwxr-xr-x. 1 root root  3006 Jun  9  2014 migrate_all_nis_online.sh
+-rwxr-xr-x. 1 root root  3164 Jun  9  2014 migrate_all_nisplus_offline.sh
+-rwxr-xr-x. 1 root root  3146 Jun  9  2014 migrate_all_nisplus_online.sh
+-rwxr-xr-x. 1 root root  5267 Jun  9  2014 migrate_all_offline.sh
+-rwxr-xr-x. 1 root root  7468 Jun  9  2014 migrate_all_online.sh
+-rwxr-xr-x. 1 root root  3278 Jun  9  2014 migrate_automount.pl
+-rwxr-xr-x. 1 root root  2608 Jun  9  2014 migrate_base.pl
+-rw-r--r--. 1 root root  8880 Jun  9  2014 migrate_common.ph
+-rwxr-xr-x. 1 root root  2952 Jun  9  2014 migrate_fstab.pl
+=============================================================
+
+This migration files will help in moving local users as LDAP users
+
+8.1 
+==========================================
+    cd /usr/share/migrationtools/
+      
+     vim migrate_common.ph
+
+line No : 71 
+change it in to 
+------------------------------------------
+# Default DNS domain
+ 71 $DEFAULT_MAIL_DOMAIN = "hpe123.com";
+ 72 
+ 73 # Default base 
+ 74 $DEFAULT_BASE = "dc=hpe123,dc=com";
+ -------------------------------------------
+ 
+ and in Line No : 90 
+ 
+ change extended_schema from 0 to 1
+ 
+  $EXTENDED_SCHEMA = 1;
+
+sava and exit
+
+9. Create Baseldif file
+
+create a file in /root/base.ldif
+
+[root@host4 migrationtools]# vim /root/base.ldif
+
+
+===========================================================
+dn: dc=hpe123,dc=com
+objectClass: top
+objectClass: dcObject
+objectclass: organization
+o: hpe123 com
+dc: hpe123
+
+dn: cn=Manager,dc=hpe123,dc=com
+objectClass: organizationalRole
+cn: Manager
+description: Directory Manager
+
+dn: ou=People,dc=hpe123,dc=com
+objectClass: organizationalUnit
+ou: People
+
+dn: ou=Group,dc=hpe123,dc=com
+objectClass: organizationalUnit
+ou: Group
+
+
+===============================================================
+
+10. Create Local users
+
+useradd shafeeque
+passwd shafeeque
+
+useradd shifin
+passwd shifin
+
+10.1 Filterout users from /etc/passwd (from service users)
+
+We only need valid linux users
+
+grep ":10[0-9][0-9]" /etc/passwd > /root/passwd
+grep ":10[0-9][0-9]" /etc/group > /root/group
+
+10.2 Convert individual files to LDAP format (ldif)
+
+We can use the migration tools to convert
+
+==========================================
+[root@host4 migrationtools]# pwd
+/usr/share/migrationtools
+[root@host4 migrationtools]# ./migrate_passwd.pl /root/passwd /root/users.ldif
+
+[root@host4 migrationtools]# ./migrate_group.pl /root/group /root/groups.ldif
+
+===========================================
+
+11. Importing these ldif files in to LDAP database 
+
+so far 3 ldif files 
+
+1. /root/base.ldif
+2. /root/users.ldif
+3. /root/group.ldif
+
+============================================
+1. importing base.ldif
+
+[root@host4 migrationtools]# ldapadd -x -W -D "cn=Manager,dc=hpe123,dc=com" -f /root/base.ldif 
+
+Enter LDAP Password: 
+adding new entry "dc=cloudties,dc=in"
+
+adding new entry "cn=Manager,dc=cloudties,dc=in"
+
+adding new entry "ou=People,dc=cloudties,dc=in"
+
+adding new entry "ou=Group,dc=cloudties,dc=in"
+
+
+2. importing user.ldif
+
+[root@host4 migrationtools]# ldapadd -x -W -D "cn=Manager,dc=hpe123,dc=com" -f /root/users.ldif 
+
+Enter LDAP Password: 
+adding new entry "uid=test,ou=People,dc=cloudties,dc=in"
+
+adding new entry "uid=test1,ou=People,dc=cloudties,dc=in"
+
+adding new entry "uid=shafeeque,ou=People,dc=cloudties,dc=in"
+
+adding new entry "uid=shifin,ou=People,dc=cloudties,dc=in"
+
+
+3. importing group.ldif
+
+[root@host4 migrationtools]# ldapadd -x -W -D "cn=Manager,dc=hpe123,dc=com" -f /root/groups.ldif 
+
+Enter LDAP Password: 
+adding new entry "cn=test,ou=Group,dc=cloudties,dc=in"
+
+adding new entry "cn=test1,ou=Group,dc=cloudties,dc=in"
+
+adding new entry "cn=shafeeque,ou=Group,dc=cloudties,dc=in"
+
+adding new entry "cn=shifin,ou=Group,dc=cloudties,dc=in"
+
+==============================================================
+
+12. Checking Whether users are  imported correctly
+============================================================================
+[root@host4 migrationtools]# ldapsearch -x cn=shafeeque -b dc=hpe123,dc=com
+
+# extended LDIF
+#
+# LDAPv3
+# base <dc=cloudties,dc=in> with scope subtree
+# filter: cn=shafeeque
+# requesting: ALL
+#
+
+# shafeeque, People, cloudties.in
+dn: uid=shafeeque,ou=People,dc=cloudties,dc=in
+uid: shafeeque
+cn: shafeeque
+sn: shafeeque
+mail: shafeeque@cloudties.in
+objectClass: person
+objectClass: organizationalPerson
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: top
+objectClass: shadowAccount
+userPassword:: e2NyeXB0fSQxJGxXMnhRbWFxJGFlNnFFdndJNWZWQWlVa2ZZOG9vdi8=
+shadowLastChange: 17275
+shadowMin: 0
+shadowMax: 99999
+shadowWarning: 7
+loginShell: /bin/bash
+uidNumber: 1002
+gidNumber: 1002
+homeDirectory: /home/shafeeque
+==================================================================
+
+Integrating Clients to LDAP Server
+===========================
+
+1. Installing Packages
+
+yum install openldap-clients nss-pam-ldapd -y
+
+2.Enter the command authconfig-tui
+
+[root@host3 ~]# authconfig-tui
+
+
+2.1 Under User Information => mark Use LDAP
+      Under Authentication => mark Use LDAP Authentication 
+
+Enter Next
+
+2.2  In LDAP Settings give LDAP Server Details
+
+        Server: ldap://172.16.234.136
+       Base DN:  dc=cloudties,dc=in
+       
+ Enter Next
+    
+   
+3. Check user details from LDAP server
+
+[root@host3 ~]# getent passwd shifin
+shifin:x:1003:1003:shifin:/home/shifin:/bin/bash
+
+if you are getting the output , client is connecting to LDAP Server
+
+ Exporting the Home directory of LDAP users
+ ==========================================
+ 
+ In the Server
+ ----------------------
+
+Create Nfs share for home directory
+
+vi /etc/exports
+
+/home/  * (rw)
+
+save and exit the file
+
+Install Nfs packages if it is not already installed 
+
+yum -y install rpcbind nfs-utils
+
+Start the NFS services
+
+1. systemctl start rpcbind
+2. systemctl start nfs
+
+
+
+
+
+
+=============================
+dn: dc=hpe123,dc=com
+objectClass: top
+objectClass: dcObject
+objectclass: organization
+o: hpe123 com
+dc: hpe123
+
+dn: cn=Manager,dc=hpe123,dc=com
+objectClass: organizationalRole
+cn: Manager
+description: Directory Manager
+
+dn: ou=people,dc=hpe123,dc=com
+objectClass: organizationalUnit
+ou: people
+
+dn: ou=group,dc=hpe123,dc=com
+objectClass: organizationalUnit
+ou: group
+
+===========================
+
+

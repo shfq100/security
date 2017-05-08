@@ -1,0 +1,208 @@
+DNS-SERVER
+===========
+On master Name Server
+----------------------
+
+﻿yum install bind bind-utils -y
+
+vim /etc/named.conf
+
+options {
+        listen-on port 53 { 127.0.0.1; 172.16.234.128; };  Master's IP
+	allow-query     { localhost; 172.16.234.0/24; };   IP Range
+        allow-transfer  { localhost; 172.16.234.129; };    Slave IP
+
+AT bottom ADD Zone details
+--------------------------
+zone "hpe123.com" IN {
+type master;
+file "forward.hpe123.com";
+allow-update { none; };
+};
+
+zone "234.16.172.in-addr.arpa" IN {
+type master;
+file "reverse.hpe123.com";
+allow-update { none; };
+};
+
+ 
+save and exit the file
+
+
+==========================
+
+Navigate to /var/named directory
+
+create 2 files
+-----------------
+1. forward.hpe123.com
+2.reverse.hpe123.com
+
+
+vim forward.hpe123.com
+
+==================================
+
+$TTL 86400
+@       IN SOA  hpe123.com. root.hpe123.com.in.  (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+@       IN      NS      server1.hpe123.com.
+@       IN      NS      server2.hpe123.com.
+server1.hpe123.com.      IN     A       172.16.234.128
+server2.hpe123.com.      IN     A       172.16.234.129
+server3.hpe123.com.      IN     A       172.16.234.130
+server4.hpe123.com.      IN     A       172.16.234.131
+
+=================================
+
+
+vim reverse.hpe123.com
+
+=============================
+
+$TTL 86400
+@       IN SOA  hpe123.com. root.hpe123.com. (
+                                        0       ; serial
+                                        1D      ; refresh
+                                        1H      ; retry
+                                        1W      ; expire
+                                        3H )    ; minimum
+@       IN      NS      server1.hpe123.com.
+@       IN      NS      server2.hpe123.com.
+server1.hpe123.com.     IN      A       172.16.234.128
+server2.hpe123.com.     IN      A       172.16.234.129
+
+128     IN      PTR     server1.hpe123.com.
+129     IN      PTR     server2.hpe123.com.
+130     IN      PTR     server3.hpe123.com.
+131     IN      PTR     server4.hpe123.com.
+
+===============================
+
+start and Enable named service
+-----------------------------
+
+systemctl start named
+systemctl enable named
+
+check for configuration errors
+-----------------------------------
+﻿named-checkconf /etc/named.conf
+
+check forward and reverse Zone
+=============================
+
+named-checkzone hpe123.com /var/named/forward.hpe123.com 
+zone hpe123.com/IN: loaded serial 1111
+OK
+
+
+ named-checkzone hpe123.com /var/named/reverse.hpe123.com 
+zone hpe123.com/IN: loaded serial 1111
+OK
+
+Make Static IP address
+===========================
+open your network configuration file
+
+take a backup of configuration file
+ cp -r ifcfg-eno16777736 ifcfg-eno16777736-org
+
+vim /etc/sysconfig/network-scripts/ifcfg-eno16777736
+
+===============================================
+
+change this line
+------------------
+BOOTPROTO="none"
+
+add these lines
+----------------
+
+IPADDR0=172.16.234.129
+DNS1=172.16.234.128
+DNS2=172.16.234.129
+DNS3=172.16.234.2
+GATEWAY0=172.16.234.2
+NETMASK=255.255.255.0
+
+==============================
+
+
+Restart the network to take changes
+----------------------------------
+
+service network restart
+
+
+
+
+
+
+In Slave server
+-==============
+
+﻿yum install bind bind-utils -y
+
+vim /etc/named.conf
+
+options {
+        listen-on port 53 { 127.0.0.1; 172.16.234.140; };
+	 allow-query     { localhost; 172.16.234.0/24; };
+
+
+
+add zone file details
+======================
+
+zone "hpe123.com" IN {
+type slave;
+file "slaves/hpe123.com.fwd";
+masters { 172.16.234.139; };
+};
+zone "234.16.172.in-addr.arpa" IN {
+type slave;
+file "slaves/hpe123.com.rev";
+masters { 172.16.234.139; };
+};
+
+
+
+
+Now change network file
+-------------------------
+
+};
+
+IPADDR0=172.16.234.129
+DNS1=172.16.234.128
+DNS2=172.16.234.129
+DNS3=172.16.234.2
+GATEWAY0=172.16.234.2
+NETMASK=255.255.255.0
+
+restart network and start the named services
+
+
+in clients 
+-------------
+
+change the network configuration file to static
+
+-------------------------
+IPADDR0=172.16.234.129
+DNS1=172.16.234.128
+DNS2=172.16.234.129
+DNS3=172.16.234.2
+GATEWAY0=172.16.234.2
+NETMASK=255.255.255.0
+-------------------------
+
+service network restart
+
+
