@@ -2,8 +2,7 @@ DNS-SERVER
 ===========
 On master Name Server
 ----------------------
-
-﻿yum install bind bind-utils -y
+yum install bind bind-utils -y
 
 vim /etc/named.conf
 
@@ -92,7 +91,7 @@ systemctl enable named
 
 check for configuration errors
 -----------------------------------
-﻿named-checkconf /etc/named.conf
+named-checkconf /etc/named.conf
 
 check forward and reverse Zone
 =============================
@@ -147,12 +146,12 @@ service network restart
 In Slave server
 -==============
 
-﻿yum install bind bind-utils -y
+yum install bind bind-utils -y
 
 vim /etc/named.conf
 
 options {
-        listen-on port 53 { 127.0.0.1; 172.16.234.140; };
+        listen-on port 53 { 127.0.0.1; 172.16.234.129; };
 	 allow-query     { localhost; 172.16.234.0/24; };
 
 
@@ -163,12 +162,12 @@ add zone file details
 zone "hpe123.com" IN {
 type slave;
 file "slaves/hpe123.com.fwd";
-masters { 172.16.234.139; };
+masters { 172.16.234.128; };
 };
 zone "234.16.172.in-addr.arpa" IN {
 type slave;
 file "slaves/hpe123.com.rev";
-masters { 172.16.234.139; };
+masters { 172.16.234.128; };
 };
 
 
