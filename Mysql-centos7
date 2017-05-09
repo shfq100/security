@@ -1,0 +1,26 @@
+Installing Mysql
+-------------------
+
+wget https://dev.mysql.com/get/mysql57-community-release-el7-9.noarch.rpm
+
+rpm -ivh mysql57-community-release-el7-9.noarch.rpm
+
+yum install mysql-server -y
+
+==========================
+
+ systemctl start mysqld
+ systemctl enable mysqld 
+
+get the temporary passwd for mysql
+
+cat /var/log/mysqld.log | grep temporary
+2017-05-08T12:46:25.883936Z 1 [Note] A temporary password is generated for root@localhost: hGXqDlEw-6sB
+2017-05-08T12:46:29.575320Z 0 [Note] InnoDB: Creating shared tablespace for temporary tables
+
+complete the mysql secure Installation before using mysql by using the following command
+----------------------------------------------------------------------
+
+mysql_secure_installation
+
+
