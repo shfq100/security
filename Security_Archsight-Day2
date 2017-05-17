@@ -1,0 +1,142 @@
+
+Day 2
+------
+
+Validate email ID
+------------
+Email Dossier
+
+centralops.net
+
+UDP port scan
+------------
+
+nmap -sU 192.168.159.130 -v (first 1000 ports)
+
+to get details about open ports and services 
+
+SNMP Enumeration
+=================
+
+checking for snmp port
+--------------------------
+nmap -sU 172.20.10.4 -p 161
+
+-sS- Syn scan
+-A -aggressive scan
+-U -- for UDP
+
+
+community string for snmp
+----------------------------
+for reading data and writing data (passwd ) 
+ 
+nmap will try to populate the target machine if it knows community string and also will get open ports , devices, etc its called enumeration
+
+enable snmp in windows , configure community string for snmp, start the service  and try nmap again 
+
+
+Every minute details will be got by the nmap
+data gathered
+--------------
+-ports
+-services
+-tasks with pid
+-shares available  
+-programs installed 
+-users available in the machine
+-netstat results
+-interface resuls 
+
+its called enumeration
+
+enable snmp in windows , configure community string for snmp, start the service  and try nmap again 
+
+
+NTP Enumeration
+=================
+
+ntp server in india 
+
+eg: 3.in.pool.ntp.org
+
+ntpdc  3.in.pool.ntp.org (to connect to ntp server)
+
+monlist (to get ip address of connected machines with ntp server)
+this will be disabled generally by the administrator
+
+DDoS Attack
+---------------
+
+BM- bot master(Attacker)
+C&C- Command control server
+Botnet - collection of bots
+
+DDos Attack
+=============== 
+Syn flooding attacking (TCP Backlog buffer will be filled very fast due to the attack, so service is denied for legitimate users.)
+
+Bandwidth attack
+
+
+SQL Injection
+--------------
+hackyourselffirst.troyhunt.com
+
+username and password for login
+
+$username
+$password
+
+str =Select username, password from users where username='$username' and password='$password' -- SQL for password check
+
+' ' 'and password
+
+' or 1=1#
+
+
+www.dilmandram.com (admin' or 1=1--)
+
+======================
+Burp Suite (proxy bypass server)
+We can make any changes from the proxy server and sent it server , whereever client validation is happening.
+
+ free in kali linux 
+course.hyperiongray.com/client-example
+
+set manual proxy
+
+
+
+SQL injection attack(Excercise)
+----------------------
+
+sqlmap --purge-out
+sqlmap -r /root/hack.txt -p Cylinders --banner --dbs (banner means type of sql server , --dbs all databases)
+Y
+Y
+
+For phising mails
+------------------
+
+https://openfish.com
+https://phishtank.com
+
+virustotal(check file or url is infected)
+
+Hacker News 
+packetstormsecurity.com
+theregister.co.uk
+
+
+njrad
+
+
+
+
+
+
+
+
+
+
